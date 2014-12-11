@@ -28,7 +28,7 @@ Save the following configuration into files with the specified names:
       tasks:
         - name: Create DNS record www.example.com
           cloudflare_domain: >
-            state=absent
+            state=present
             name=www
             zone=example.com
             type=A
