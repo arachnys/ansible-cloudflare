@@ -7,20 +7,26 @@ This module makes use of the rec_new, rec_edit, and rec_delete API calls, with
 the following parameters: z, type, id, name, content, ttl. Other methods and
 parameters of the API have yet to be implemented.
 
-Please see the [CloudFlare Client API documentation][cf] for more information
+Please see the `CloudFlare Client API documentation`_ for more information
 about the different methods and parameters available.
 
 
-## Installation
+Installation
+------------
+
+.. code:: bash
 
     pip install ansible-cloudflare
 
 
-## Playbook example
+Playbook example
+----------------
 
 Save the following configuration into files with the specified names:
 
 **cloudflare.yaml:**
+
+.. code:: yaml
 
     - hosts: localhost
       connection: local
@@ -39,15 +45,19 @@ Save the following configuration into files with the specified names:
 
 **hosts:**
 
+.. code::
+
     # Dummy inventory for ansible
     localhost
 
 Then run the playbook with the following command:
 
+.. code::
+
     ansible-playbook -i hosts cloudflare.yaml
 
 The email and token parameters can also be specified by setting the
-`CLOUDFLARE_API_EMAIL` and `CLOUDFLARE_API_TOKEN` environment variables.
+``CLOUDFLARE_API_EMAIL`` and ``CLOUDFLARE_API_TOKEN`` environment variables.
 
 
-[cf]: https://www.cloudflare.com/docs/client-api.html
+.. _CloudFlare Client API documentation: https://www.cloudflare.com/docs/client-api.html
