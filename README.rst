@@ -14,7 +14,7 @@ about the different methods and parameters available.
 Installation
 ------------
 
-.. code:: bash
+::
 
     pip install ansible-cloudflare
 
@@ -24,9 +24,9 @@ Playbook example
 
 Save the following configuration into files with the specified names:
 
-**cloudflare.yaml:**
+**cloudflare.yaml**
 
-.. code:: yaml
+::
 
     - hosts: localhost
       connection: local
@@ -43,16 +43,14 @@ Save the following configuration into files with the specified names:
             token=77a54a4c36858cfc10321fcfce22378e19e20
 
 
-**hosts:**
+**hosts**
 
-.. code::
+::
 
     # Dummy inventory for ansible
     localhost
 
-Then run the playbook with the following command:
-
-.. code::
+Then run the playbook with the following command::
 
     ansible-playbook -i hosts cloudflare.yaml
 
