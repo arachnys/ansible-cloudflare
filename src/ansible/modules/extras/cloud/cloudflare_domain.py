@@ -75,11 +75,11 @@ class Cloudflare(object):
         self.email = email
         self.token = token
 
-    def request(self, data, doseq=False):
+    def request(self, data):
         data += [('email', self.email),
                  ('tkn', self.token)]
 
-        req = urllib2.urlopen(self.url, urlencode(data, doseq))
+        req = urllib2.urlopen(self.url, urlencode(data))
         response_json = json.loads(req.read())
 
         if response_json['result'] != 'success':
