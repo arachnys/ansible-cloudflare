@@ -70,16 +70,16 @@ class CloudflareException(Exception):
     pass
 
 class Cloudflare(object):
-    def __init__(self, email, token):
+    def __init__(self, email, token, zone):
         self.url   = 'https://www.cloudflare.com/api_json.html'
         self.email = email
         self.token = token
+        self.zone = zone
 
-    def request(self, data):
-        data += [('email', self.email),
-                 ('tkn', self.token)]
+    def request(self, **kwargs):
+        kwargs.update(email=self.email, tkn=self.token, z=self.zone)
 
-        req = urllib2.urlopen(self.url, urlencode(data))
+        req = urllib2.urlopen(self.url, urlencode(kwargs))
         response_json = json.loads(req.read())
 
         if response_json['result'] != 'success':
@@ -87,43 +87,34 @@ class Cloudflare(object):
 
         return response_json
 
-    def rec_load_all(self, zone):
-        data = [('a', 'rec_load_all'),
-                ('z', zone)]
+    def rec_load_all(self):
+        return self.request(a='rec_load_all')
 
-        return self.request(data)
+    def rec_new(self, type, name, content, ttl=1):
+        return self.request(
+            a='rec_new',
+            type=type,
+            name=name,
+            content=content,
+            ttl=ttl
+        )
 
-    def rec_new(self, zone, type, name, content, ttl=1):
-        data = [('a',       'rec_new'),
-                ('z',       zone),
-                ('type',    type),
-                ('name',    name),
-                ('content', content),
-                ('ttl',     ttl)]
+    def rec_edit(self, id, type, name, content, ttl=1):
+        return self.request(
+            a='rec_edit',
+            id=id,
+            type=type,
+            name=name,
+            content=content,
+            ttl=ttl
+        )
 
-        return self.request(data)
-
-    def rec_edit(self, id, zone, type, name, content, ttl=1):
-        data = [('a',       'rec_edit'),
-                ('id',      id),
-                ('z',       zone),
-                ('type',    type),
-                ('name',    name),
-                ('content', content),
-                ('ttl',     ttl)]
-
-        return self.request(data)
-
-    def rec_delete(self, id, zone):
-        data = [('a',  'rec_delete'),
-                ('id', id),
-                ('z',  zone)]
-
-        return self.request(data)
+    def rec_delete(self, id):
+        return self.request(a='rec_delete', id=id)
 
 def cloudflare_domain(module):
-    cloudflare = Cloudflare(module.params['email'], module.params['token'])
-    existing_records = cloudflare.rec_load_all(module.params['zone'])
+    cloudflare = Cloudflare(module.params['email'], module.params['token'], module.params['zone'])
+    existing_records = cloudflare.rec_load_all()
     existing_records = existing_records['response']['recs']['objs']
 
     name = module.params['name'] + '.' + module.params['zone']
@@ -133,7 +124,6 @@ def cloudflare_domain(module):
         if record:
             response = cloudflare.rec_edit(
                 record[0]['rec_id'],
-                module.params['zone'],
                 module.params['type'],
                 module.params['name'],
                 module.params['content']
@@ -145,7 +135,6 @@ def cloudflare_domain(module):
             module.exit_json(changed=True)
 
         response = cloudflare.rec_new(
-            module.params['zone'],
             module.params['type'],
             module.params['name'],
             module.params['content']
@@ -155,10 +144,7 @@ def cloudflare_domain(module):
 
     elif module.params['state'] == 'absent':
         if record:
-            response = cloudflare.rec_delete(
-                record[0]['rec_id'],
-                record[0]['zone_name'],
-            )
+            response = cloudflare.rec_delete(record[0]['rec_id'])
 
             module.exit_json(changed=True)
 
