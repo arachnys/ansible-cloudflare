@@ -117,7 +117,10 @@ def cloudflare_domain(module):
     existing_records = cloudflare.rec_load_all()
     existing_records = existing_records['response']['recs']['objs']
 
-    name = module.params['name'] + '.' + module.params['zone']
+    name = module.params['name']
+    if name != module.params['zone']:
+        name += '.' + module.params['zone']
+
     record = filter(lambda x: x['name'] == name, existing_records)
 
     if module.params['state'] == 'present':
