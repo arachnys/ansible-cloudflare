@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  author: Marcus Fredriksson
+  description: An ansible module for managing CloudFlare DNS records
+  license: BSD
+  min_ansible_version: 1.8
+  platforms:
+    - name: Ubuntu
+      versions:
+       - trusty
+    - name: Debian
+      versions:
+       - wheezy
+  categories:
+    - cloud
+    - networking
+    - web
