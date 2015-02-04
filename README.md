@@ -13,14 +13,36 @@ information about the different methods and parameters available.
 Installation
 ------------
 
+### Ansible Galaxy
+
+The [Ansible Galaxy][] is a collection of third-party roles for ansible. You
+can install ansible-cloudflare from the galaxy by executing the following command:
+
     ansible-galaxy install DrMegahertz.cloudflare
+
+Please note that you'll have to add the role `DrMegahertz.cloudflare` to your
+playbook to make use of the `cloudflare_domain` task.
+
+
+### As a Git submodule
+
+If you'd rather have all your provisioning code in one place you could also
+add it to your playbook-repository as a [git submodule][].
+This method doesn't require that you specify the role `DrMegahertz.cloudflare`
+in your playbook. Just use the `cloudflare_domain` task directly.
+
+    cd playbook-directory
+    mkdir vendor
+    git submodule add https://github.com/DrMegahertz/ansible-cloudflare.git vendor/ansible-cloudflare
+    mkdir library
+    ln -s vendor/ansible-cloudflare/library/cloudflare_domain.py library/cloudflare_domain.py
 
 Playbook example
 ----------------
 
 Save the following configuration into files with the specified names:
 
-**cloudflare.yaml**
+**cloudflare.yaml:**
 
     - hosts: localhost
       connection: local
@@ -38,7 +60,7 @@ Save the following configuration into files with the specified names:
             email=joe@example.com
             token=77a54a4c36858cfc10321fcfce22378e19e20
 
-**hosts**
+**hosts:**
 
     # Dummy inventory for ansible
     localhost
@@ -50,4 +72,6 @@ Then run the playbook with the following command:
 The email and token parameters can also be specified by setting the
 `CLOUDFLARE_API_EMAIL` and `CLOUDFLARE_API_TOKEN` environment variables.
 
-  [CloudFlare Client API documentation]: https://www.cloudflare.com/docs/client-api.html
+[CloudFlare Client API documentation]: https://www.cloudflare.com/docs/client-api.html
+[Ansible Galaxy]: https://galaxy.ansible.com/
+[git submodule]: http://git-scm.com/book/en/v2/Git-Tools-Submodules
