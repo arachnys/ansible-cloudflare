@@ -125,29 +125,36 @@ def cloudflare_domain(module):
 
     if module.params['state'] == 'present':
         if record:
-            response = cloudflare.rec_edit(
-                record[0]['rec_id'],
+            if record[0]['name'] != name or \
+               record[0]['type'] != module.params['type'] or \
+               record[0]['content'] != module.params['content']:
+
+                if not module.check_mode:
+                    cloudflare.rec_edit(
+                        record[0]['rec_id'],
+                        module.params['type'],
+                        module.params['name'],
+                        module.params['content']
+                    )
+
+                module.exit_json(changed=True)
+
+            module.exit_json(changed=False)
+
+        if not module.check_mode:
+            response = cloudflare.rec_new(
                 module.params['type'],
                 module.params['name'],
                 module.params['content']
             )
 
-            if record[0]['rec_hash'] == response['response']['rec']['obj']['rec_hash']:
-                module.exit_json(changed=False)
-
-            module.exit_json(changed=True)
-
-        response = cloudflare.rec_new(
-            module.params['type'],
-            module.params['name'],
-            module.params['content']
-        )
-
         module.exit_json(changed=True)
 
     elif module.params['state'] == 'absent':
         if record:
-            response = cloudflare.rec_delete(record[0]['rec_id'])
+
+            if not module.check_mode:
+                response = cloudflare.rec_delete(record[0]['rec_id'])
 
             module.exit_json(changed=True)
 
@@ -167,7 +174,8 @@ def main():
             content = dict(required=True),
             email   = dict(no_log=True, default=os.environ.get('CLOUDFLARE_API_EMAIL')),
             token   = dict(no_log=True, default=os.environ.get('CLOUDFLARE_API_TOKEN'), aliases=['tkn']),
-        )
+        ),
+        supports_check_mode=True,
     )
 
     try:
