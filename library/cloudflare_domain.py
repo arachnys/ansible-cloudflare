@@ -3,6 +3,7 @@
 
 import json
 import urllib2
+from operator import itemgetter
 from urllib import urlencode
 
 DOCUMENTATION = '''
@@ -117,28 +118,16 @@ def cloudflare_domain(module):
     existing_records = cloudflare.rec_load_all()
     existing_records = existing_records['response']['recs']['objs']
 
-    name = module.params['name']
+    get_record_attributes = itemgetter('name', 'type', 'content')
+    name, type, content = get_record_attributes(module.params)
+
     if name != module.params['zone']:
         name += '.' + module.params['zone']
 
-    record = filter(lambda x: x['name'] == name, existing_records)
+    record = filter(lambda x: get_record_attributes(x) == (name, type, content), existing_records)
 
     if module.params['state'] == 'present':
         if record:
-            if record[0]['name'] != name or \
-               record[0]['type'] != module.params['type'] or \
-               record[0]['content'] != module.params['content']:
-
-                if not module.check_mode:
-                    cloudflare.rec_edit(
-                        record[0]['rec_id'],
-                        module.params['type'],
-                        module.params['name'],
-                        module.params['content']
-                    )
-
-                module.exit_json(changed=True)
-
             module.exit_json(changed=False)
 
         if not module.check_mode:
@@ -152,7 +141,6 @@ def cloudflare_domain(module):
 
     elif module.params['state'] == 'absent':
         if record:
-
             if not module.check_mode:
                 response = cloudflare.rec_delete(record[0]['rec_id'])
 
