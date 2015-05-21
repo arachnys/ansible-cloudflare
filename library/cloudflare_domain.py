@@ -9,9 +9,9 @@ from urllib import urlencode
 DOCUMENTATION = '''
 ---
 module: cloudflare_domain
-short_description: Create, edit or delete Cloudflare DNS records.
+short_description: Create or delete Cloudflare DNS records.
 description:
-  - Create, edit or delete Cloudflare DNS records.
+  - Create or delete Cloudflare DNS records.
 author: Marcus Fredriksson <drmegahertz@gmail.com>
 options:
   state:
@@ -94,16 +94,6 @@ class Cloudflare(object):
     def rec_new(self, type, name, content, ttl=1):
         return self.request(
             a='rec_new',
-            type=type,
-            name=name,
-            content=content,
-            ttl=ttl
-        )
-
-    def rec_edit(self, id, type, name, content, ttl=1):
-        return self.request(
-            a='rec_edit',
-            id=id,
             type=type,
             name=name,
             content=content,

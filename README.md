@@ -3,7 +3,7 @@ ansible-cloudflare
 
 An ansible module for managing CloudFlare DNS records.
 
-This module makes use of the rec\_new, rec\_edit, and rec\_delete API
+This module makes use of the rec\_new and rec\_delete API
 calls, with the following parameters: z, type, id, name, content, ttl.
 Other methods and parameters of the API have yet to be implemented.
 
