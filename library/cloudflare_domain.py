@@ -105,43 +105,42 @@ class Cloudflare(object):
 
 def cloudflare_domain(module):
     cloudflare = Cloudflare(module.params['email'], module.params['token'], module.params['zone'])
-    existing_records = cloudflare.rec_load_all()
-    existing_records = existing_records['response']['recs']['objs']
+    existing_records = cloudflare.rec_load_all()['response']['recs']['objs']
 
+    # Shortcuts
     get_record_attributes = itemgetter('name', 'type', 'content')
     name, type, content = get_record_attributes(module.params)
+    zone, state = module.params['zone'], module.params['state']
 
-    if name != module.params['zone']:
-        name += '.' + module.params['zone']
+    if name != zone:
+        name += '.' + zone
 
-    record = filter(lambda x: get_record_attributes(x) == (name, type, content), existing_records)
+    # Fetch the existing record, if any.
+    existing_record = None
+    for each in existing_records:
+        if get_record_attributes(each) == (name, type, content):
+            existing_record = each
+            break
 
-    if module.params['state'] == 'present':
-        if record:
+    if state == 'present':
+        if existing_record:
             module.exit_json(changed=False, name=name, type=type, content=content)
 
         if not module.check_mode:
-            response = cloudflare.rec_new(
-                module.params['type'],
-                module.params['name'],
-                module.params['content']
-            )
+            response = cloudflare.rec_new(type, name, content)
 
-        module.exit_json(
-            changed=True,
-            name=module.params['name'],
-            content=module.params['content'],
-            type=module.params['type']
-        )
+        module.exit_json(changed=True, name=name, type=type, content=content)
 
-    elif module.params['state'] == 'absent':
-        if record:
+    elif state == 'absent':
+        if existing_record:
+            record_id = existing_record[0]['rec_id']
+
             if not module.check_mode:
-                response = cloudflare.rec_delete(record[0]['rec_id'])
+                response = cloudflare.rec_delete(record_id)
 
             module.exit_json(
                 changed=True,
-                delete=record[0]['rec_id'],
+                delete=record_id,
                 record={
                     'name': name,
                     'content': content,
