@@ -118,7 +118,7 @@ def cloudflare_domain(module):
 
     if module.params['state'] == 'present':
         if record:
-            module.exit_json(changed=False)
+            module.exit_json(changed=False, name=name, type=type, content=content)
 
         if not module.check_mode:
             response = cloudflare.rec_new(
@@ -127,16 +127,29 @@ def cloudflare_domain(module):
                 module.params['content']
             )
 
-        module.exit_json(changed=True)
+        module.exit_json(
+            changed=True,
+            name=module.params['name'],
+            content=module.params['content'],
+            type=module.params['type']
+        )
 
     elif module.params['state'] == 'absent':
         if record:
             if not module.check_mode:
                 response = cloudflare.rec_delete(record[0]['rec_id'])
 
-            module.exit_json(changed=True)
+            module.exit_json(
+                changed=True,
+                delete=record[0]['rec_id'],
+                record={
+                    name: record[0]['name'],
+                    content: record[0]['content'],
+                    type: record[0]['type']
+                }
+            )
 
-        module.exit_json(changed=False)
+        module.exit_json(changed=False, name=name, type=type, content=content)
 
     module.fail_json(msg='Unknown value "{0}" for argument state. Expected one of: present, absent.')
 
