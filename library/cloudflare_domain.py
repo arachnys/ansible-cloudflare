@@ -124,12 +124,12 @@ def cloudflare_domain(module):
 
     if state == 'present':
         if existing_record:
-            module.exit_json(changed=False, name=name, type=type, content=content)
+            module.exit_json(changed=False, name=module.params['name'], type=type, content=content)
 
         if not module.check_mode:
-            response = cloudflare.rec_new(type, name, content)
+            response = cloudflare.rec_new(type, module.params['name'], content)
 
-        module.exit_json(changed=True, name=name, type=type, content=content)
+        module.exit_json(changed=True, name=module.params['name'], type=type, content=content)
 
     elif state == 'absent':
         if existing_record:
@@ -142,13 +142,13 @@ def cloudflare_domain(module):
                 changed=True,
                 delete=record_id,
                 record={
-                    'name': name,
+                    'name': module.params['name'],
                     'content': content,
                     'type': type
                 }
             )
 
-        module.exit_json(changed=False, name=name, type=type, content=content)
+        module.exit_json(changed=False, name=module.params['name'], type=type, content=content)
 
     module.fail_json(msg='Unknown value "{0}" for argument state. Expected one of: present, absent.')
 
@@ -173,5 +173,8 @@ def main():
     except Exception as e:
         module.fail_json(msg=str(e))
 
+
 from ansible.module_utils.basic import *
-main()
+
+if __name__ == '__main__':
+    main()
