@@ -133,7 +133,7 @@ def cloudflare_domain(module):
 
     elif state == 'absent':
         if existing_record:
-            record_id = existing_record[0]['rec_id']
+            record_id = existing_record['rec_id']
 
             if not module.check_mode:
                 response = cloudflare.rec_delete(record_id)
