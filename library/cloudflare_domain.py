@@ -127,14 +127,22 @@ def cloudflare_domain(module):
                 module.params['content']
             )
 
-        module.exit_json(changed=True)
+        module.exit_json(
+            changed=True,
+            name=module.params.get('name'),
+            content=module.params.get('content'),
+            # type=module.params.type.get('type')
+        )
 
     elif module.params['state'] == 'absent':
         if record:
             if not module.check_mode:
                 response = cloudflare.rec_delete(record[0]['rec_id'])
 
-            module.exit_json(changed=True)
+            module.exit_json(
+                changed=True,
+                delete=record[0]['name']
+            )
 
         module.exit_json(changed=False)
 
