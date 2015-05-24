@@ -143,9 +143,9 @@ def cloudflare_domain(module):
                 changed=True,
                 delete=record[0]['rec_id'],
                 record={
-                    name: record[0]['name'],
-                    content: record[0]['content'],
-                    type: record[0]['type']
+                    'name': name,
+                    'content': content,
+                    'type': type
                 }
             )
 
