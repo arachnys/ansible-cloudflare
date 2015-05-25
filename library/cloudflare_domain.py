@@ -78,6 +78,9 @@ class Cloudflare(object):
         self.zone = zone
 
     def request(self, **kwargs):
+        # remove unset
+        kwargs = dict((k, v) for k, v in kwargs.iteritems() if v)
+
         kwargs.update(email=self.email, tkn=self.token, z=self.zone)
 
         req = urllib2.urlopen(self.url, urlencode(kwargs))
@@ -91,13 +94,20 @@ class Cloudflare(object):
     def rec_load_all(self):
         return self.request(a='rec_load_all')
 
-    def rec_new(self, type, name, content, ttl=1):
+    def rec_new(self, type, name, content, ttl=1, mode=None):
+        mode_types = ['A', 'AAAA', 'CNAME']
+
+        # mode is only allowed in DNS record types
+        if mode and not type in mode_types:
+            raise Exception(mode, 'is only allowed with one of this types:', mode_types)
+
         return self.request(
             a='rec_new',
             type=type,
             name=name,
             content=content,
-            ttl=ttl
+            ttl=ttl,
+            service_mode=service_mode.index(mode) if mode else None
         )
 
     def rec_delete(self, id):
@@ -127,9 +137,9 @@ def cloudflare_domain(module):
             module.exit_json(changed=False, name=module.params['name'], type=type, content=content)
 
         if not module.check_mode:
-            response = cloudflare.rec_new(type, module.params['name'], content)
+            response = cloudflare.rec_new(type, module.params['name'], content, mode=module.params['mode'])
 
-        module.exit_json(changed=True, name=module.params['name'], type=type, content=content)
+        module.exit_json(changed=True, name=module.params['name'], type=type, content=content, service_mode=module.params['mode'])
 
     elif state == 'absent':
         if existing_record:
@@ -152,6 +162,7 @@ def cloudflare_domain(module):
 
     module.fail_json(msg='Unknown value "{0}" for argument state. Expected one of: present, absent.')
 
+service_mode = ['DNS', 'CDN']
 def main():
     domain_types = ['A', 'CNAME', 'MX', 'TXT', 'SPF', 'AAAA', 'NS', 'SRV', 'LOC']
 
@@ -161,6 +172,7 @@ def main():
             name    = dict(required=True),
             zone    = dict(required=True, aliases=['z']),
             type    = dict(required=True, choices=domain_types),
+            mode    = dict(default='DNS', choices=service_mode),
             content = dict(required=True),
             email   = dict(no_log=True, default=os.environ.get('CLOUDFLARE_API_EMAIL')),
             token   = dict(no_log=True, default=os.environ.get('CLOUDFLARE_API_TOKEN'), aliases=['tkn']),
