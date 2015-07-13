@@ -115,8 +115,7 @@ class Cloudflare(object):
 
 def cloudflare_domain(module):
     cloudflare = Cloudflare(module.params['email'], module.params['token'], module.params['zone'])
-    responseRecordCollection = cloudflare.rec_load_all()['response']['recs']
-    existing_records = responseRecordCollection.get('objs', [])
+    existing_records = cloudflare.rec_load_all()['response']['recs']['objs'] or []
 
     # Shortcuts
     get_record_attributes = itemgetter('name', 'type', 'content')
