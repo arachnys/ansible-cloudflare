@@ -22,7 +22,8 @@ class TestCloudflareDomain(unittest.TestCase):
             'name': 'home',
             'state': 'present',
             'type': 'A',
-            'content': '127.0.0.1'
+            'content': '127.0.0.1',
+            'mode': None
         }
 
         mock_module_params.update(kwargs)
@@ -105,6 +106,7 @@ class TestCloudflareDomain(unittest.TestCase):
             mock_module.params['type'],
             mock_module.params['name'],
             mock_module.params['content'],
+            mode=None
         )
 
         # Make sure that the module reported that changes were made.
@@ -113,6 +115,7 @@ class TestCloudflareDomain(unittest.TestCase):
             type=mock_module.params['type'],
             name=mock_module.params['name'],
             content=mock_module.params['content'],
+            service_mode=None,
         )
 
     @patch('cloudflare_domain.Cloudflare')
