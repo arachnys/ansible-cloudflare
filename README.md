@@ -75,3 +75,15 @@ The email and token parameters can also be specified by setting the
 [CloudFlare Client API documentation]: https://www.cloudflare.com/docs/client-api.html
 [Ansible Galaxy]: https://galaxy.ansible.com/
 [git submodule]: http://git-scm.com/book/en/v2/Git-Tools-Submodules
+
+Contributing
+------------
+
+To install this project's dependencies using
+[PIP](https://pip.pypa.io/en/stable/), run the following command:
+
+    $ pip install -r requirements.txt
+
+To execute the project's tests, run the following command:
+
+    $ python library/tests.py
