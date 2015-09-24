@@ -150,12 +150,9 @@ def cloudflare_domain(module):
 
             module.exit_json(
                 changed=True,
-                delete=record_id,
-                record={
-                    'name': module.params['name'],
-                    'content': content,
-                    'type': type
-                }
+                name=module.params['name'],
+                content=content,
+                type=type
             )
 
         module.exit_json(changed=False, name=module.params['name'], type=type, content=content)

@@ -179,12 +179,9 @@ class TestCloudflareDomain(unittest.TestCase):
         # Make sure that the module reported that changes were made.
         mock_module.exit_json.assert_called_once_with(
             changed=True,
-            delete="16606009",
-            record=dict(
-              type=mock_module.params['type'],
-              name=mock_module.params['name'],
-              content=mock_module.params['content'],
-            )
+            type=mock_module.params['type'],
+            name=mock_module.params['name'],
+            content=mock_module.params['content'],
         )
 
     @patch('cloudflare_domain.Cloudflare')
