@@ -151,7 +151,7 @@ class TestCloudflareDomain(unittest.TestCase):
         )
 
     @patch('cloudflare_domain.Cloudflare')
-    def test_remove_exiting_record(self, mock_cloudflare_cls):
+    def test_remove_existing_record(self, mock_cloudflare_cls):
         mock_cloudflare_cls.return_value = self.mock_cloudflare_instance
         mock_module = self.get_mock_module(
             zone='example.com',
