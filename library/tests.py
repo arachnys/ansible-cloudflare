@@ -176,7 +176,7 @@ class TestCloudflareDomain(unittest.TestCase):
             "16606009"
         )
 
-        # Make sure that the module reported that no changes were made.
+        # Make sure that the module reported that changes were made.
         mock_module.exit_json.assert_called_once_with(
             changed=True,
             delete="16606009",
