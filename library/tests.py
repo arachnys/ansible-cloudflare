@@ -150,6 +150,76 @@ class TestCloudflareDomain(unittest.TestCase):
             content=mock_module.params['content'],
         )
 
+    @patch('cloudflare_domain.Cloudflare')
+    def test_remove_exiting_record(self, mock_cloudflare_cls):
+        mock_cloudflare_cls.return_value = self.mock_cloudflare_instance
+        mock_module = self.get_mock_module(
+            zone='example.com',
+            name='www',
+            state='absent',
+            type='A',
+            content='127.0.0.1'
+       )
+
+        # Perform the actual tests.
+        with self.assertRaises(ModuleExit):
+            cloudflare_domain(mock_module)
+
+        # Call rec_load_all to determine whether we're creating a new entry or
+        # editing an existing one.
+        self.assertTrue(self.mock_cloudflare_instance.rec_load_all.called)
+
+        self.assertFalse(self.mock_cloudflare_instance.rec_new.called)
+        self.assertFalse(self.mock_cloudflare_instance.rec_edit.called)
+
+        self.mock_cloudflare_instance.rec_delete.assert_called_once_with(
+            "16606009"
+        )
+
+        # Make sure that the module reported that no changes were made.
+        mock_module.exit_json.assert_called_once_with(
+            changed=True,
+            delete="16606009",
+            record=dict(
+              type=mock_module.params['type'],
+              name=mock_module.params['name'],
+              content=mock_module.params['content'],
+            )
+        )
+
+    @patch('cloudflare_domain.Cloudflare')
+    def test_remove_non_existing_record(self, mock_cloudflare_cls):
+        mock_cloudflare_cls.return_value = self.mock_cloudflare_instance
+        mock_module = self.get_mock_module(
+            zone='example.com',
+            name='foo',
+            state='absent',
+            type='A',
+            content='127.0.0.1'
+       )
+
+        # Perform the actual tests.
+        with self.assertRaises(ModuleExit):
+            cloudflare_domain(mock_module)
+
+        # Call rec_load_all to determine whether we're creating a new entry or
+        # editing an existing one.
+        self.assertTrue(self.mock_cloudflare_instance.rec_load_all.called)
+
+        # Make sure that we're never calling rec_new, rec_edit, or rec_delete
+        # since no changes have been made.
+        self.assertFalse(self.mock_cloudflare_instance.rec_new.called)
+        self.assertFalse(self.mock_cloudflare_instance.rec_edit.called)
+        self.assertFalse(self.mock_cloudflare_instance.rec_delete.called)
+
+        # Make sure that the module reported that no changes were made.
+        mock_module.exit_json.assert_called_once_with(
+            changed=False,
+            type=mock_module.params['type'],
+            name=mock_module.params['name'],
+            content=mock_module.params['content'],
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
