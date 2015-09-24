@@ -40,6 +40,7 @@ options:
   content:
     description:
       - The content of the DNS record, will depend on the the type of record being added.
+      - May be set to "*" when `state` is "absent" in order to delete multiple records regardless of content
     required: true
 
   token:
@@ -118,22 +119,26 @@ def cloudflare_domain(module):
     existing_records = cloudflare.rec_load_all()['response']['recs']['objs'] or []
 
     # Shortcuts
-    get_record_attributes = itemgetter('name', 'type', 'content')
-    name, type, content = get_record_attributes(module.params)
+    get_record_attributes = itemgetter('name', 'type')
+    name, type = get_record_attributes(module.params)
+    content = module.params['content']
     zone, state = module.params['zone'], module.params['state']
 
     if name != zone:
         name += '.' + zone
 
     # Fetch the existing record, if any.
-    existing_record = None
+    matching_records = []
+
     for each in existing_records:
-        if get_record_attributes(each) == (name, type, content):
-            existing_record = each
-            break
+        if get_record_attributes(each) == (name, type) and (each['content'] == content or content == '*'):
+            matching_records.append(each)
 
     if state == 'present':
-        if existing_record:
+        if content == '*':
+            module.fail_json(msg='The content value "*" is only valid when removing records.')
+
+        if len(matching_records) > 0:
             module.exit_json(changed=False, name=module.params['name'], type=type, content=content)
 
         if not module.check_mode:
@@ -142,11 +147,15 @@ def cloudflare_domain(module):
         module.exit_json(changed=True, name=module.params['name'], type=type, content=content, service_mode=module.params['mode'])
 
     elif state == 'absent':
-        if existing_record:
-            record_id = existing_record['rec_id']
+        if len(matching_records) > 0:
+            record_ids = []
 
-            if not module.check_mode:
-                response = cloudflare.rec_delete(record_id)
+            for matching_record in matching_records:
+                record_id = matching_record['rec_id']
+                record_ids.append(record_id)
+
+                if not module.check_mode:
+                    cloudflare.rec_delete(record_id)
 
             module.exit_json(
                 changed=True,
