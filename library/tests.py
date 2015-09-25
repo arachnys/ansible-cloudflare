@@ -44,7 +44,7 @@ class TestCloudflareDomain(unittest.TestCase):
                 },
                 "response": {
                     "recs": {
-                        "count": 1,
+                        "count": 3,
                         "has_more": False,
                         "objs": [
                             {
@@ -66,6 +66,62 @@ class TestCloudflareDomain(unittest.TestCase):
                                 },
                                 "rec_hash": "7f8e77bac02ba65d34e20c4b994a202c",
                                 "rec_id": "16606009",
+                                "service_mode": "0",
+                                "ssl_expires_on": None,
+                                "ssl_id": "214451",
+                                "ssl_status": "V",
+                                "ttl": "1",
+                                "ttl_ceil": 86400,
+                                "type": "A",
+                                "zone_name": "example.com"
+                            },
+                            {
+                                "auto_ttl": 1,
+                                "content": "127.0.0.2",
+                                "display_content": "127.0.0.2",
+                                "display_name": "www",
+                                "name": "www.example.com",
+                                "prio": None,
+                                "props": {
+                                    "cf_open": 1,
+                                    "cloud_on": 0,
+                                    "expired_ssl": 0,
+                                    "expiring_ssl": 0,
+                                    "pending_ssl": 0,
+                                    "proxiable": 1,
+                                    "ssl": 1,
+                                    "vanity_lock": 0
+                                },
+                                "rec_hash": "7f8e77bac02ba65d34e20c4b994a202c",
+                                "rec_id": "16606010",
+                                "service_mode": "0",
+                                "ssl_expires_on": None,
+                                "ssl_id": "214451",
+                                "ssl_status": "V",
+                                "ttl": "1",
+                                "ttl_ceil": 86400,
+                                "type": "A",
+                                "zone_name": "example.com"
+                            },
+                            {
+                                "auto_ttl": 1,
+                                "content": "127.0.0.1",
+                                "display_content": "127.0.0.1",
+                                "display_name": "mail",
+                                "name": "mail.example.com",
+                                "prio": None,
+                                "props": {
+                                    "cf_open": 1,
+                                    "cloud_on": 0,
+                                    "expired_ssl": 0,
+                                    "expiring_ssl": 0,
+                                    "pending_ssl": 0,
+                                    "proxiable": 1,
+                                    "ssl": 1,
+                                    "vanity_lock": 0
+                                },
+                                "rec_hash": "7f8e77bac02ba65d34e20c4b994a202c",
+                                "rec_id": "16606011",
                                 "service_mode": "0",
                                 "ssl_expires_on": None,
                                 "ssl_id": "214451",
@@ -212,6 +268,72 @@ class TestCloudflareDomain(unittest.TestCase):
         # Make sure that the module reported that no changes were made.
         mock_module.exit_json.assert_called_once_with(
             changed=False,
+            type=mock_module.params['type'],
+            name=mock_module.params['name'],
+            content=mock_module.params['content'],
+        )
+
+    @patch('cloudflare_domain.Cloudflare')
+    def test_create_star_content(self, mock_cloudflare_cls):
+        mock_cloudflare_cls.return_value = self.mock_cloudflare_instance
+        mock_module = self.get_mock_module(
+            zone='example.com',
+            name='www',
+            state='present',
+            type='A',
+            content='*'
+       )
+
+        # Perform the actual tests.
+        with self.assertRaises(ModuleFail):
+            cloudflare_domain(mock_module)
+
+        # Call rec_load_all to determine whether we're creating a new entry or
+        # editing an existing one.
+        self.assertTrue(self.mock_cloudflare_instance.rec_load_all.called)
+
+        self.assertFalse(self.mock_cloudflare_instance.rec_new.called)
+        self.assertFalse(self.mock_cloudflare_instance.rec_edit.called)
+        self.assertFalse(self.mock_cloudflare_instance.rec_delete.called)
+
+        # Make sure that the module failed
+        self.assertTrue(mock_module.fail_json.called)
+
+    @patch('cloudflare_domain.Cloudflare')
+    def test_remove_star_content(self, mock_cloudflare_cls):
+        mock_cloudflare_cls.return_value = self.mock_cloudflare_instance
+        mock_module = self.get_mock_module(
+            zone='example.com',
+            name='www',
+            state='absent',
+            type='A',
+            content='*'
+       )
+
+        # Perform the actual tests.
+        with self.assertRaises(ModuleExit):
+            cloudflare_domain(mock_module)
+
+        # Call rec_load_all to determine whether we're creating a new entry or
+        # editing an existing one.
+        self.assertTrue(self.mock_cloudflare_instance.rec_load_all.called)
+
+        self.assertFalse(self.mock_cloudflare_instance.rec_new.called)
+        self.assertFalse(self.mock_cloudflare_instance.rec_edit.called)
+
+        self.assertEquals(
+            self.mock_cloudflare_instance.rec_delete.call_count, 2
+        )
+        self.mock_cloudflare_instance.rec_delete.assert_any_call(
+            "16606009"
+        )
+        self.mock_cloudflare_instance.rec_delete.assert_any_call(
+            "16606010"
+        )
+
+        # Make sure that the module reported that no changes were made.
+        mock_module.exit_json.assert_called_once_with(
+            changed=True,
             type=mock_module.params['type'],
             name=mock_module.params['name'],
             content=mock_module.params['content'],
