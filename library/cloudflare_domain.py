@@ -72,11 +72,12 @@ class CloudflareException(Exception):
     pass
 
 class Cloudflare(object):
-    def __init__(self, email, token, zone):
+    def __init__(self, email, token, zone, offset):
         self.url   = 'https://www.cloudflare.com/api_json.html'
         self.email = email
         self.token = token
         self.zone = zone
+        self.offset = offset
 
     def request(self, **kwargs):
         # remove unset
@@ -93,7 +94,8 @@ class Cloudflare(object):
         return response_json
 
     def rec_load_all(self):
-        return self.request(a='rec_load_all')
+        response = self.request(a='rec_load_all',o=self.offset)
+        return response
 
     def rec_new(self, type, name, content, ttl=1, mode=None):
         mode_types = ['A', 'AAAA', 'CNAME']
@@ -115,8 +117,17 @@ class Cloudflare(object):
         return self.request(a='rec_delete', id=id)
 
 def cloudflare_domain(module):
-    cloudflare = Cloudflare(module.params['email'], module.params['token'], module.params['zone'])
-    existing_records = cloudflare.rec_load_all()['response']['recs']['objs'] or []
+    offset = 0
+    cloudflare_json_page_size = 180
+    existing_records = []
+    
+    while True:
+        cloudflare = Cloudflare(module.params['email'], module.params['token'], module.params['zone'], offset)
+        has_more_records = cloudflare.rec_load_all()['response']['recs']['has_more']
+        existing_records += cloudflare.rec_load_all()['response']['recs']['objs'] or []
+        offset += cloudflare_json_page_size
+        if has_more_records == False:
+            break
 
     # Shortcuts
     get_record_attributes = itemgetter('name', 'type')
